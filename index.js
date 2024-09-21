@@ -27,40 +27,9 @@ const performBackup = () => {
   });
 };
 
-// Function to delete backups older than 30 days
-const deleteOldBackups = () => {
-  const days = 30;
-  const now = new Date();
-
-  readdir(backupDirectory, (err, files) => {
-    if (err) {
-      return console.error(`Error reading backup directory: ${err.message}`);
-    }
-
-    files.forEach((file) => {
-      const filePath = join(backupDirectory, file);
-
-      stat(filePath, (err, stats) => {
-        if (err) {
-          return console.error(`Error getting stats for file: ${err.message}`);
-        }
-
-        const fileAgeInDays = (now - new Date(stats.mtime)) / (1000 * 60 * 60 * 24);
-        if (fileAgeInDays > days) {
-          trash([filePath])
-            .then(
-              // () => console.log(`Moved old backup to Recycle Bin: ${filePath}`)
-              )
-            .catch((err) => console.error(`Error moving file to Recycle Bin: ${err.message}`));
-        }
-      });
-    });
-  });
-};
 
 
 // Schedule the backup to run every day at midnight
 cron.schedule('0 0 * * *', () => {
   performBackup();
-  deleteOldBackups();
 });
