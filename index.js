@@ -3,8 +3,10 @@ import cron from 'node-cron';
 import { format } from 'date-fns';
 import { readdir, stat, unlink } from 'fs';
 import { join } from 'path';
+import trash from 'trash';
 
-const backupDirectory = '/home/userver/backup';
+// const backupDirectory = '/home/userver/backup';
+const backupDirectory = '/mnt/windows_backup';
 const databaseName = 'goat';
 const connectionString = 'mongodb://localhost:27017';
 
@@ -45,18 +47,17 @@ const deleteOldBackups = () => {
 
         const fileAgeInDays = (now - new Date(stats.mtime)) / (1000 * 60 * 60 * 24);
         if (fileAgeInDays > days) {
-          unlink(filePath, (err) => {
-            if (err) {
-              console.error(`Error deleting file: ${err.message}`);
-            } else {
-              console.log(`Deleted old backup: ${filePath}`);
-            }
-          });
+          trash([filePath])
+            .then(
+              // () => console.log(`Moved old backup to Recycle Bin: ${filePath}`)
+              )
+            .catch((err) => console.error(`Error moving file to Recycle Bin: ${err.message}`));
         }
       });
     });
   });
 };
+
 
 // Schedule the backup to run every day at midnight
 cron.schedule('0 0 * * *', () => {
